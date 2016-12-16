@@ -31,13 +31,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // ****************************************************************************
         // Uncomment and fill in with your Parse credentials:
          Parse.setApplicationId("app", clientKey: "slachactb")
-        let configuration = ParseClientConfiguration {
+        /*let configuration = ParseClientConfiguration {
             $0.applicationId = "app"
             $0.server = "http://abdlilahbenkirane.example.com:1337/parse"
             $0.clientKey = "slachactb"
         }
         Parse.initialize(with: configuration)
-		
+		*/
         
         //
         // If you are using Facebook, uncomment and add your FacebookAppID to your bundle's plist as

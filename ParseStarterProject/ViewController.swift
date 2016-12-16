@@ -14,39 +14,38 @@ import CoreBluetooth
 let CHARACHTERISTIC_UUID = "FFF3"
 let SERVICE_UUID = "FFF0"
 
-class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDelegate {
-    
+class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDelegate,UITableViewDataSource,UITableViewDelegate {
+	@IBOutlet weak var showDisoveredDevices: UITableView!
     var centralManager : CBCentralManager?
     var discoveredPeripheral : CBPeripheral?
     var bluetoothON = false
-    @IBOutlet weak var btStateValueLabel: UILabel!
+	var datareceived : String = "No-Data"
+	var bluetoothStatus : String?
+	var btlog : String?
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
-	@IBOutlet weak var btLog: UITextView!
-   
+	
+	
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        self.btLog.isEditable = false
+		
+		super.viewDidLoad()
+		self.showDisoveredDevices.isHidden = true
         self.spinner.hidesWhenStopped = true
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
-        
+        self.showDisoveredDevices.allowsSelection=true
+		
     }
-    
-    
+	
+
     @IBAction func goButtonPressed(_ sender: UIButton) {
         
         startScan()
+		showDisoveredDevices.reloadData()
         
 		
         
     }
-	
-	func showLog(msg : String){
-		let pref = "\r\n\r\n"
-		self.btLog.text =  pref.appending(self.btLog.text)
-		self.btLog.text = msg.appending(self.btLog.text)
-	}
     
     func startScan() {
         
@@ -60,23 +59,23 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
 		
 		else if (self.bluetoothON && self.discoveredPeripheral != nil) {
 			
-			showLog(msg: "Already connected to \(self.discoveredPeripheral!.name!)")
+			self.btlog = "Already connected to \(self.discoveredPeripheral!.name!)"
 		}
 		
 		else {
 			
-			showLog(msg: "Error performing this action")
+			self.btlog = "Error performing this action"
 		}
+		self.showDisoveredDevices.isHidden = false
+		self.showDisoveredDevices.reloadData()
     }
     
     // MARK - CBCentralManagerDelegate
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
-        showLog(msg: "discovered \(peripheral.name!) with RSSI \(RSSI)")
+		
         self.discoveredPeripheral = peripheral
         self.centralManager?.connect(peripheral, options: nil)
-        
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -91,9 +90,9 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         
         peripheral.delegate = self
-        showLog(msg: "connected to peripheral name \(peripheral.name!)")
         self.spinner.stopAnimating()
-        //centralManager?.stopScan()
+		showDisoveredDevices.reloadData()
+        centralManager?.stopScan()
         peripheral.discoverServices(nil)
 
     }
@@ -101,7 +100,8 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         
         if (error != nil ) {
-            showLog(msg: error.debugDescription)
+            self.btlog = error.debugDescription
+			self.showDisoveredDevices.reloadData()
         }
         
         for  service in peripheral.services! {
@@ -111,7 +111,8 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if (error != nil) {
-            showLog(msg: error.debugDescription)
+            self.btlog = error.debugDescription
+			self.showDisoveredDevices.reloadData()
         }
         
         for characteristic in service.characteristics! {
@@ -126,24 +127,30 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if( error != nil ) {
             
-            showLog(msg:error.debugDescription)
+            self.btlog = error.debugDescription
         
         }
         let stringFromData = String(data : characteristic.value! , encoding : .utf8)
-        showLog(msg:"data received from the peripheral will be stored to cloud")
 		
-		 let testObject = PFObject(className: "TestObject")
+		self.datareceived = stringFromData!
+		showDisoveredDevices.reloadData()
+		
+		/* let testObject = PFObject(className: "TestObject")
 		testObject[stringFromData!] = stringFromData!
 		testObject.saveInBackground { (success, error) in
 		self.showLog(msg:"Object saved to cloud.")
 		}
-
+		*/
     }
 	
 	func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
-		showLog(msg: "peripheral with name \(peripheral.name!) has changed services and is now disconnected")
+		self.btlog = "\(peripheral.name!) is now disconnected"
+		btlog = " "
+		self.datareceived = " "
 		self.centralManager?.cancelPeripheralConnection(peripheral)
 		self.discoveredPeripheral = nil
+		self.showDisoveredDevices.isHidden=true
+		self.showDisoveredDevices.reloadData()
 	}
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -152,21 +159,73 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
         
         case .poweredOn:
             self.bluetoothON = true
-            self.btStateValueLabel.text = "ON"
+            self.bluetoothStatus = "ON"
+			self.showDisoveredDevices.reloadData()
+			startScan()
         case .poweredOff:
             self.bluetoothON = false
-            self.btStateValueLabel.text = "OFF"
+            self.bluetoothStatus = "OFF"
+			self.showDisoveredDevices.reloadData()
+			spinner.stopAnimating()
         case .unsupported:
-            self.btStateValueLabel.text = "unsupported"
+            self.bluetoothStatus = "unsupported"
+			self.showDisoveredDevices.reloadData()
         case .unauthorized:
-            self.btStateValueLabel.text = "unauthorized"
+            self.bluetoothStatus = "unauthorized"
+			self.showDisoveredDevices.reloadData()
             
             
         default:
             break
         }
     }
-    
+	// MARK - TableView Data Source
+	
+	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		if self.discoveredPeripheral != nil { return 5 }
+		return 0
+	}
+	
+	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		
+		let cell : DeviceInfoCell = showDisoveredDevices.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! DeviceInfoCell
+		
+		switch (indexPath.row) {
+		
+			case 0 :
+			
+			cell.cellTitle.text = " blueTooth Status : "
+			cell.deviceName.text = self.bluetoothStatus
+			
+			case 1 :
+				
+					cell.cellTitle.text = " Connected to : "
+					cell.deviceName.text = self.discoveredPeripheral?.name
+			
+			case 2 :
+				
+					cell.cellTitle.text = " Data : "
+					cell.deviceName.text = self.datareceived
+				
+			case 3 :
+					
+					cell.cellTitle.text = " UUID "
+					cell.deviceName.text = self.discoveredPeripheral?.identifier.uuidString
+			case 4 :
+			
+					cell.cellTitle.text = self.btlog
+					cell.deviceName.text = " "
+			
+		default : break
+			
+		}
+		
+		return cell
+	}
+	
+	func numberOfSections(in tableView: UITableView) -> Int {
+		return 1
+	}
 
 
     override func didReceiveMemoryWarning() {
