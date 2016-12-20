@@ -35,6 +35,14 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
         self.showDisoveredDevices.allowsSelection=true
 		
+		let Department = PFObject(className: "department")
+		Department.setObject("jiXs4gYFIC", forKey: "person")
+		Department.setObject("Economics", forKey: "departmentName")
+
+		Department.saveInBackground { (success, error) in
+			
+		}
+		
     }
 	
 
@@ -134,13 +142,7 @@ class ViewController: UIViewController,CBCentralManagerDelegate,CBPeripheralDele
 		
 		self.datareceived = stringFromData!
 		showDisoveredDevices.reloadData()
-		
-		/* let testObject = PFObject(className: "TestObject")
-		testObject[stringFromData!] = stringFromData!
-		testObject.saveInBackground { (success, error) in
-		self.showLog(msg:"Object saved to cloud.")
-		}
-		*/
+
     }
 	
 	func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {

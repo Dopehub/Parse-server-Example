@@ -26,18 +26,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Enable storing and querying data from Local Datastore.
         // Remove this line if you don't want to use Local Datastore features or want to use cachePolicy.
-        Parse.enableLocalDatastore()
 
         // ****************************************************************************
         // Uncomment and fill in with your Parse credentials:
-         Parse.setApplicationId("app", clientKey: "slachactb")
-        /*let configuration = ParseClientConfiguration {
-            $0.applicationId = "app"
-            $0.server = "http://abdlilahbenkirane.example.com:1337/parse"
-            $0.clientKey = "slachactb"
-        }
+		Parse.enableLocalDatastore()
+		Parse.setApplicationId("7acb0a4fae46f9d9ffb7812fb158af3e0274ad97", clientKey: "5d9037c4111c42719fa68b10bf82d5c4d95b4297")
+		
+		let configuration = ParseClientConfiguration {
+            $0.applicationId = "7acb0a4fae46f9d9ffb7812fb158af3e0274ad97"
+			$0.server = "http://ec2-54-236-226-118.compute-1.amazonaws.com:80/parse"
+
+			$0.clientKey = "5d9037c4111c42719fa68b10bf82d5c4d95b4297"
+		}
+
         Parse.initialize(with: configuration)
-		*/
+		
         
         //
         // If you are using Facebook, uncomment and add your FacebookAppID to your bundle's plist as
